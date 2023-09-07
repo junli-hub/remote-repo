@@ -50,6 +50,7 @@ int main(void)
             command[cmdLen++]=c;
         }
         command[cmdLen]='\0';
+        if(cmdLen==0)   continue;
         op=makeOP(command,1000);
         //发送操作符
         bzero(&train,sizeof(train));
@@ -64,7 +65,7 @@ int main(void)
             }
         case FILE_GETS:
             {
-                printf("FILE_GETS\n");
+                getClient(sfd,command);
                 break;
             }
         case FILE_PUTS:
@@ -79,7 +80,7 @@ int main(void)
             }
         case DIR_LS:
             {
-                printf("DIR_LS\n");
+                clientLs(sfd);
                 break;
             }
         case DIR_PWD:

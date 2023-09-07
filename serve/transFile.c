@@ -14,11 +14,14 @@ int transFile(int netfd){
     if(ret!=1)
     { 
         ret=recvSign(netfd,pDataSql);
+        NETDISK_LOG_INFO("Sign");
         serveMkdir(pDataSql,username,-1,netfd);
+        NETDISK_LOG_INFO("Mkdir");
     }
     else
     {
         ret=recvLogin(netfd,pDataSql);
+        NETDISK_LOG_INFO("Login");
     }
     if(ret==-1)
     {
@@ -42,51 +45,61 @@ int transFile(int netfd){
         switch(op){
         case FILE_REMOVE:
             {
+                NETDISK_LOG_INFO("remove");
                 serveRemove(pDataSql,fileID,username,netfd);
                 break;
             }
         case FILE_GETS:
             {
-                printf("FILE_GETS\n");
+                NETDISK_LOG_INFO("gets");
+                getServer(netfd,fileID,pDataSql);
                 break;
             }
         case FILE_PUTS:
             {
+                NETDISK_LOG_INFO("puts");
                 putsServe(pDataSql,fileID,username,netfd);
                 break;
             }
         case DIR_CD:
             {
+                NETDISK_LOG_INFO("CD");
                 cdServe(pDataSql,&fileID,username,netfd);
                 break;
             }
         case DIR_LS:
             {
-                printf("DIR_LS\n");
+                NETDISK_LOG_INFO("LS");
+                lsServe(pDataSql,username,fileID,netfd);
                 break;
             }
         case DIR_PWD:
             {
+                NETDISK_LOG_INFO("PWD");
                 pwdServe(pDataSql,fileID,netfd);
                 break;
             }
         case DIR_MKDIR:
             {
+                NETDISK_LOG_INFO("Mkdir");
                 serveMkdir(pDataSql,username,fileID,netfd);
                 break;
             }
         case DIR_RMDIR:
             {
+                NETDISK_LOG_INFO("rmdir");
                 serveRmdir(pDataSql,fileID,username,netfd);
                 break;
             }
         case USER_EXIT:
             {
+                NETDISK_LOG_INFO("exit");
                 printf("USER_EXIT\n");
                 goto end;
             }
         case OTHER:
             {
+                NETDISK_LOG_INFO("other");
                 printf("command not find or command error\n");
                 break;
             }

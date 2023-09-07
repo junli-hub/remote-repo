@@ -1,4 +1,65 @@
 #include "clientHead.h"
+int getClient(int netfd,char* fileName)
+{
+    int lseekNum=0,tag=0;
+    train_t train;
+    bzero(&train,sizeof(train));
+    //发送文件名
+    train.length=strlen(fileName);
+    memcpy(train.data,fileName,train.length);
+    send(netfd,&train,sizeof(train.length)+train.length,MSG_NOSIGNAL);
+    //接受服务端文件是否存在标志
+    bzero(&train,sizeof(train));
+    recvn(netfd,&train.length,sizeof(train.length));
+    recvn(netfd,&tag,train.length);
+    if(tag==0) return -1;
+    FileExistOrSize(fileName,&lseekNum);
+    //发送偏移量
+    bzero(&train,sizeof(train));
+    train.length=sizeof(int); 
+    memcpy(train.data,&lseekNum,sizeof(lseekNum));
+    send(netfd,&train,sizeof(train.length)+train.length,MSG_NOSIGNAL);
+    //接受文件长度并偏转
+    int fd=open(fileName,O_RDWR | O_CREAT,0666);
+    size_t len=0;
+    recv(netfd,&train.length,sizeof(train.length),MSG_WAITALL);
+    recv(netfd,&len,train.length,MSG_WAITALL);
+    ftruncate(fd,len);
+    lseek(fd,lseekNum,SEEK_SET);
+     //小火车协议的大文件传输
+    while(len-lseekNum>0){
+        bzero(&train,sizeof(train));
+        recv(netfd,&train.length,sizeof(train.length),MSG_WAITALL);
+        if(train.length == 0)
+        {
+            break;
+        }
+        recv(netfd,train.data,train.length,MSG_WAITALL);
+        write(fd,train.data,train.length);
+        lseekNum+=train.length;
+    }
+    printf("success\n");
+    close(fd);
+    return 0;
+
+}
+int clientLs(int sfd)
+{
+    train_t train;
+    bzero(&train,sizeof(train));
+    int nums;
+    recvn(sfd,&train.length,sizeof(train.length));
+    recvn(sfd,&nums,train.length);
+    for(int i=0;i<nums;i++)
+    {
+        bzero(&train,sizeof(train));
+        recvn(sfd,&train.length,sizeof(train.length));
+        recvn(sfd,train.data,train.length);
+        printf("%s    ",train.data); 
+    }
+    putchar('\n');
+    return 0;
+}
 //返回值：成功返回0，失败返回-1
 int clientPwd(int sfd)
 {

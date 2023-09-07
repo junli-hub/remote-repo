@@ -25,6 +25,11 @@ typedef struct train_s {
 #define IP "192.168.50.129"
 #define PORT "1234"
 #define NUM "3"
+#define NETDISK_LOG_INFO(op) { \
+    syslog(LOG_INFO, "File:%s Function:%s line:%d User_operation:%s\n",__FILE__,__FUNCTION__,__LINE__,op);\
+} 
+
+#define NETDISK_LOG_ERROR(op,errorfun,intflag){syslog(LOG_ERR, "File:%s Function:%s line:%d  User_operation:%s errorfun:%s flag=%d\n",__FILE__,__FUNCTION__,__LINE__,op,errorfun,intflag);}  
 //线程池
 int initThreadPool(threadPool_t *pThreadPool, int workerNum);
 int makeWorker(threadPool_t *pThreadPool);
@@ -80,6 +85,7 @@ int findFileID(MYSQL *pMySql,char *username);
 int cdServe(MYSQL *pMySql,int *fileID,char *username,int netfd);
 int pwdServe(MYSQL *pMySql,int fileID,int netfd);
 int serveRmdir(MYSQL *pMySql,int fileID,const char* username,int netfd);
-
+int lsServe(MYSQL *pDataSql,char *username,int fileID,int netfd); 
+int getServer(int netfd,int id,MYSQL* pmysql);
 
 #endif

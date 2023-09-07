@@ -46,3 +46,5 @@ int FileExistOrSize(char *filename,int *length);
 int putsClient(char *command,int sfd);
 //返回值：成功返回0，失败返回-1
 int clientPwd(int sfd);
+int clientLs(int sfd);
+int getClient(int netfd,char* fileName);

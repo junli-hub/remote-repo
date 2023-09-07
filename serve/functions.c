@@ -1,4 +1,105 @@
 #include "threadPool.h"
+//return 0 正常，return 1 ，没有找到文件
+int getServer(int netfd,int id,MYSQL* pmysql)
+{
+    //接收文件名
+    char filename[4096] = {0};
+    train_t train;
+    bzero(&train,sizeof(train));
+    recvn(netfd,&train.length,sizeof(train.length));
+    recvn(netfd,train.data,train.length);
+    memcpy(filename,train.data,train.length);
+    //查找md5
+    char sql[1024] ;
+    sprintf(sql, "select md5 from fileInfo where filename='%s' and pre_id=%d;" ,filename,id);
+    int qret = mysql_query(pmysql,sql);
+    if(qret != 0){
+        fprintf(stderr,"mysql_query 1:%s\n", mysql_error(pmysql));
+        return -1;
+    }
+    //没有md5，文件不存在
+    int tag=1;
+    MYSQL_RES * result = mysql_store_result(pmysql);
+    if(mysql_num_rows(result)==0)
+    {
+        tag=0;
+    }
+    //发送文件是否存在状态
+    bzero(&train,sizeof(train));
+    train.length=sizeof(train.length);
+    memcpy(train.data,&tag,train.length);
+    send(netfd,&train,sizeof(train.length)+train.length,MSG_NOSIGNAL);
+    if(tag==0) return -1;
+    //计算文件路径
+    MYSQL_ROW row;
+    char readname[1024]={0};
+    row=mysql_fetch_row(result);
+    char path1[]="/home/lijun/remote-repo/serve/";
+    strcpy(readname, path1);
+    strcat(readname, row[0]);
+    //接受偏移量
+    train_t breakPoint;
+    int lseekSize=0;//偏移量
+    bzero(&breakPoint,sizeof(breakPoint));
+    recvn(netfd,&breakPoint.length,sizeof(breakPoint.length));
+    recvn(netfd,&lseekSize,breakPoint.length);
+    //打开要发送的文件对象，获取文件内容大小信息，并发送给客户端
+    int fd = open(readname,O_RDWR,0666);
+    ERROR_CHECK(fd,-1,"open");
+    struct stat statbuf;
+    fstat(fd,&statbuf);
+    train.length = sizeof(statbuf.st_size);
+    memcpy(train.data,&statbuf.st_size,train.length);
+    send(netfd,&train,sizeof(train.length)+train.length,MSG_NOSIGNAL);
+    //偏移fd
+    lseek(fd,lseekSize,SEEK_SET);
+    while(statbuf.st_size-lseekSize>0){
+        bzero(train.data,sizeof(train.data));
+        ssize_t sret = read(fd,train.data,sizeof(train.data));
+        if(sret == 0){
+            break;
+        }
+        train.length = sret;
+        send(netfd,&train,sizeof(train.length)+train.length,MSG_NOSIGNAL);
+        lseekSize+=sret;
+    }
+    close(fd);
+
+    return 0;
+
+}
+int lsServe(MYSQL *pMySql,char *username,int fileID,int netfd)
+{
+    train_t train;
+    bzero(&train,sizeof(train));
+    char sql[4096]={0};
+    sprintf(sql,"select * from fileInfo WHERE user='%s' and pre_id=%d and tomb=0;"
+            ,username,fileID);
+    int qret = mysql_query(pMySql,sql);
+    if(qret != 0){
+        fprintf(stderr,"ls 1:%s\n", mysql_error(pMySql));
+        return -1;
+    }
+    MYSQL_RES * result = mysql_store_result(pMySql);
+    if(result==NULL)
+    {
+        fprintf(stderr, "ls 2: %s\n", mysql_error(pMySql));
+        return -1;
+    }
+    int nums=mysql_num_rows(result);
+    train.length=sizeof(train.length);
+    memcpy(train.data,&nums,train.length);
+    send(netfd, &train, sizeof(train.length) + train.length, MSG_NOSIGNAL);
+    MYSQL_ROW row;
+    while( (row = mysql_fetch_row(result)) != NULL)
+    {
+        bzero(&train,sizeof(train));
+        train.length=strlen(row[1]);
+        memcpy(train.data,row[1],train.length);
+        send(netfd, &train, sizeof(train.length) + train.length, MSG_NOSIGNAL);
+    }
+    return 0;
+}
 int serveRmdir(MYSQL *pMySql,int fileID,const char* username,int netfd)
 {
     //接收目录名
@@ -239,16 +340,16 @@ int insertFile(MYSQL *pMySql,char *filename,char *md5,int fileID,const char *use
             ,filename,path,username,fileID,md5);
     qret = mysql_query(pMySql,sql);
     if(qret != 0){
-         fprintf(stderr,"insertFile 1:%s\n", mysql_error(pMySql));
-         return -1;
+        fprintf(stderr,"insertFile 1:%s\n", mysql_error(pMySql));
+        return -1;
     } 
     MYSQL_RES * result1 = mysql_store_result(pMySql);
     if(result1==NULL)
     {
-         fprintf(stderr, "insertFile 2: %s\n", mysql_error(pMySql));
-         return -1;
+        fprintf(stderr, "insertFile 2: %s\n", mysql_error(pMySql));
+        return -1;
     }
-    
+
     if(mysql_num_rows(result1)!=0) return 0;
     //插入行
     bzero(sql,sizeof(sql));
@@ -314,7 +415,9 @@ int putsServe(MYSQL *pMySql,int fileID,const char* username,int netfd)
         memcpy(train.data,&tag,train.length);
         send(netfd, &train, sizeof(train.length) + train.length, MSG_NOSIGNAL);
         //创建md5文件并接受文件内容
-        int fd=open(md5,O_RDWR | O_CREAT,0777);
+        char configMd5[2048]={0};
+        sprintf(configMd5,"/home/lijun/remote-repo/serve/config/%s",md5);
+        int fd=open(configMd5,O_RDWR | O_CREAT,0777);
         int length;
         bzero(&train,sizeof(train));
         recvn(netfd,&train.length,sizeof(train.length));
