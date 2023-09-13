@@ -1,15 +1,13 @@
-#include <func.h>
-typedef struct token_s{
-      int length;
-      int op;
-      char token[1000];
-      char username[1000];
-  }token_t;
-
+#include "head.h"
 int main(void)
 {
-    int m=sizeof(token_t);
-    printf("%d\n",m);
+    fdSolt_t *tree=initRBTree();
+    int m[16]={20,10,5,30,40,57,3,2,4,35,25,18,22,23,24,19};
+    for(int i=0;i<16;i++)
+    {
+        insertNode(tree,m[i]);
+    }
+    inorder(tree,tree->root);
+    printf("\n");
     return 0;
 }
-
