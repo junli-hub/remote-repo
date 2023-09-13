@@ -2,7 +2,7 @@ Srcs:= $(wildcard *.c)
 OBJs:= $(patsubst %.c,%.o,$(Srcs))
 EXE := main
 
-CFLAGS := -Wall -g -lpthread -lcrypt -lmysqlclient
+CFLAGS := -Wall -g -lpthread -lcrypt -lmysqlclient -ll8w8jwt 
 
 
 .PHONY: clean rebuild o_clean

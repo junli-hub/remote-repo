@@ -2,6 +2,7 @@
 #include "md5.h"
 #define IP "192.168.50.129"                                                                     
 #define PORT "1234"
+#define PORT2 "3456"
 #define READ_DATA_SIZE  1024
 #define MD5_SIZE        16
 #define MD5_STR_LEN     (MD5_SIZE * 2)
@@ -10,6 +11,13 @@ typedef struct train_s{
     int length;
     char data[1000];//上限值
 }train_t;
+typedef struct token_s{
+    int length;
+    int op;
+    int fileID;
+    char token[1000];
+    char username[1000];
+}token_t;
 int sign(int netfd,char *username);
 int login(char *username,int netFd);
 int recvn(int sockfd, void* buf, int lengthgth);
@@ -48,3 +56,6 @@ int putsClient(char *command,int sfd);
 int clientPwd(int sfd);
 int clientLs(int sfd);
 int getClient(int netfd,char* fileName);
+int longConnectGetClient(char *command);
+int longConnectPutsClient(char *command);
+

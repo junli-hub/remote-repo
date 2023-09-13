@@ -34,7 +34,7 @@ int getServer(int netfd,int id,MYSQL* pmysql)
     MYSQL_ROW row;
     char readname[1024]={0};
     row=mysql_fetch_row(result);
-    char path1[]="/home/lijun/remote-repo/serve/";
+    char path1[]="/home/lijun/remote-repo/serve/config/";
     strcpy(readname, path1);
     strcat(readname, row[0]);
     //接受偏移量
@@ -217,7 +217,8 @@ int cdServe(MYSQL *pMySql,int *fileID,char *username,int netfd)
         if(mysql_num_rows(result)==0) return -1;
         MYSQL_ROW row;
         row = mysql_fetch_row(result);
-        *fileID=atoi(row[4]);  
+        int m=atoi(row[4]);
+        if(m!=-1) *fileID=atoi(row[4]);  
     }
     else if(strcmp(command,"~")==0)
     {

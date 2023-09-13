@@ -79,10 +79,9 @@ int putsClient(char *command,int sfd)
     if(ret==-2)
     {
         bzero(&train,sizeof(train));
-        train.length=sizeof(train.length);
+        train.length=sizeof(tag);
         memcpy(train.data,&tag,train.length);
         send(sfd, &train, sizeof(train.length) + train.length, MSG_NOSIGNAL);
-        printf("file no exit\n");
         return -1;
     }
     else if(ret==0)
@@ -119,7 +118,7 @@ int putsClient(char *command,int sfd)
             int fd=open(command,O_RDWR);
             
             char *p = (char *)mmap(NULL,length,PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
-            printf("%d\n",length);
+            printf("length:%d\n",length);
             send(sfd,p,length,MSG_NOSIGNAL);
             munmap(p,length);
             close(fd);

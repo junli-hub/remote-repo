@@ -35,10 +35,25 @@ int main(void)
         close(sfd);
         return 0;
     }
+    int fileID;
+    //接受token,fileID
+    char token[1000]={0};
+    train_t train;
+    bzero(&train,sizeof(train));
+    recvn(sfd,&train.length,sizeof(train.length));
+    recvn(sfd,token,train.length);
+    bzero(&train,sizeof(train));
+    recvn(sfd,&train.length,sizeof(train.length));
+    recvn(sfd,&fileID,train.length);
+    //初始化
     char command[1000]={0};
     char c;
-    int cmdLen=1,op;
-    train_t train;
+    int cmdLen=1,op,tag;
+    token_t usertoken;
+    bzero(&usertoken,sizeof(usertoken));
+    memcpy(usertoken.token,token,strlen(token));
+    memcpy(usertoken.username,username,strlen(username));
+    usertoken.length=sizeof(token_t);
     printTips();
     printf("->");
     while((c=getchar())=='\n');
@@ -52,11 +67,26 @@ int main(void)
         command[cmdLen]='\0';
         if(cmdLen==0)   continue;
         op=makeOP(command,1000);
-        //发送操作符
+        //发送token_t(操作符+token+用户名)
+        memcpy(&usertoken.fileID,&fileID,sizeof(usertoken.fileID));
+        memcpy(&usertoken.op,&op,sizeof(op));
+        send(sfd, &usertoken, usertoken.length, MSG_NOSIGNAL);
+        //接受服务端校验信息与超时信息
         bzero(&train,sizeof(train));
-        train.length=sizeof(op);
-        memcpy(train.data,&op,sizeof(op));
-        send(sfd, &train, sizeof(train.length) + train.length, MSG_NOSIGNAL);
+        recvn(sfd,&train.length,sizeof(train.length));
+        if(train.length!=0) recvn(sfd,&tag,train.length);
+        if(train.length==0)
+        {
+            printf("Time_out,client quit\n");
+            close(sfd);
+            return 0;
+        }
+        if(tag==-1)
+        {
+            printf("Client_Send_Error\n");
+            close(sfd);
+            return 0;
+        }
         switch(op){
         case FILE_REMOVE:
             {
@@ -65,12 +95,12 @@ int main(void)
             }
         case FILE_GETS:
             {
-                getClient(sfd,command);
+                longConnectGetClient(command);
                 break;
             }
         case FILE_PUTS:
             {
-                putsClient(command,sfd);
+                longConnectPutsClient(command);
                 break;
             }
         case DIR_CD:
@@ -110,6 +140,10 @@ int main(void)
                 break;
             }
         }
+        //接受fileID
+        bzero(&train,sizeof(train));
+        recvn(sfd,&train.length,sizeof(train.length));
+        recvn(sfd,&fileID,train.length);
         bzero(command,sizeof(command));
         cmdLen=0;
         printf("->");
