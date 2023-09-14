@@ -7,6 +7,14 @@ void inorder(fdSolt_t *T,rbTreeNode_t *root)
     }
     inorder(T,root->left);
     printf("%d ",root->fd);
+    if(root->color==RED)
+    {
+        printf("color:RED\n");
+    }
+    else
+    {
+        printf("color:BLACK\n");
+    }
     inorder(T,root->right);
 }
 fdSolt_t *initRBTree()
@@ -119,7 +127,7 @@ void alterUncle(fdSolt_t *T,rbTreeNode_t *father,rbTreeNode_t *newp)
         return;
     }
     int colorUncle=checkUncleColor(father);
-    if(colorUncle==RED)
+    if(colorUncle==RED)//父爷叔颜色反转
     {
         father->color=BLACK;
         rbTreeNode_t *grandFather=father->parent;
@@ -132,12 +140,12 @@ void alterUncle(fdSolt_t *T,rbTreeNode_t *father,rbTreeNode_t *newp)
         {
             grandFather->left->color=BLACK;
         }
-        if(grandFather==T->root)
+        if(grandFather==T->root)//爷为根则变黑后结束调整
         {
             grandFather->color=BLACK;
             return;
         }
-        alterUncle(T,grandFather->parent,grandFather);
+        alterUncle(T,grandFather->parent,grandFather);//爷为新节点，递归调用更新函数
     }        
     else
     {
@@ -229,3 +237,38 @@ void insertNode(fdSolt_t *T,int fd)
     //插入结点的父节点为红色：看叔父节点黑红
     alterUncle(T,father,newp);
 }
+rbTreeNode_t *findDeleteNode(fdSolt_t *T,int fd)
+{
+    if(T->root==T->nil) return T->nil;
+    rbTreeNode_t *cur=T->root;
+    while(cur!=T->nil)
+    {
+        if(cur->fd>fd)
+        {
+            cur=cur->left;
+        }
+        else if(cur->fd<fd)
+        {
+            cur=cur->right;
+        }
+        else
+        {
+            return cur;
+        }
+    }
+    return T->nil;
+}
+void deleteNode(fdSolt_t *T,int fd)
+{
+    rbTreeNode_t *node=findDeleteNode(T,fd);
+    if(node==T->nil) return;
+    //如果删除的结点为红色
+    if(node->color==RED)
+    {
+
+        return;
+    }
+
+
+
+}    

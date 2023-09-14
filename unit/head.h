@@ -22,7 +22,10 @@ fdSolt_t *initRBTree();
 void rightRotate(fdSolt_t *T,rbTreeNode_t *x);
 void leftRotate(fdSolt_t *T,rbTreeNode_t *x);
 void insertNode(fdSolt_t *T,int fd);
+//查找插入结点的父节点
 rbTreeNode_t *findInsertPlace(fdSolt_t *T,rbTreeNode_t *newp);
 int checkUncleColor(rbTreeNode_t *father); 
 void alterUncle(fdSolt_t *T,rbTreeNode_t *father,rbTreeNode_t *newp);
 void inorder(fdSolt_t *T,rbTreeNode_t *root);
+void deleteNode(fdSolt_t *T,int fd);
+rbTreeNode_t *findDeleteNode(fdSolt_t *T,int fd); 
