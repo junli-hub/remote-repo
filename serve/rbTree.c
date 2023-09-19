@@ -1,21 +1,14 @@
-#include "head.h"
-void inorder(fdSolt_t *T,rbTreeNode_t *root)
+#include "threadPool.h"
+void inorder(fdSolt_t *T,rbTreeNode_t *root,int *arr,int *len)
 {
-    if(T->nil==root)
+    if(T->nil==root || *len==-1)
     {
         return;
     }
-    inorder(T,root->left);
-    printf("%d ",root->fd);
-    if(root->color==RED)
-    {
-        printf("color:RED\n");
-    }
-    else
-    {
-        printf("color:BLACK\n");
-    }
-    inorder(T,root->right);
+    inorder(T,root->left,arr,len);
+    inorder(T,root->right,arr,len);
+    (*len)--;
+    arr[*len]=root->fd;
 }
 fdSolt_t *initRBTree()
 {
@@ -283,7 +276,7 @@ void rbTransplant(fdSolt_t *T,rbTreeNode_t *u,rbTreeNode_t *v)
     {
         u->parent->right=v;
     }
-    v->parent=u->parent;
+    if(v!=T->nil) v->parent=u->parent;
 }
 void RB_delete_fixup(fdSolt_t *T, rbTreeNode_t** x)
 {
@@ -357,17 +350,16 @@ void RB_delete_fixup(fdSolt_t *T, rbTreeNode_t** x)
             }
         }
     }
-    (*x)->color = BLACK;
+    if(*x!=NULL)(*x)->color = BLACK;
 }
 
 void deleteNode(fdSolt_t *T,int fd)
 {
     rbTreeNode_t *z=findDeleteNode(T,fd);
-    if(z==T->nil) return;
+    if(z==T->nil || z==NULL) return;
     ColorTyper yoc=z->color;
     rbTreeNode_t *y=z;
     rbTreeNode_t *x;
-
     if(z->left==T->nil )
     {
         x = z->right;
@@ -407,3 +399,13 @@ void deleteNode(fdSolt_t *T,int fd)
     free(z);
     T->size--;
 }    
+void deleteOrder(fdSolt_t *T,rbTreeNode_t *root)
+{
+    if(root==T->nil)
+    {
+        return;
+    }
+    deleteOrder(T,root->left);
+    deleteOrder(T,root->right);
+    free(root);
+}

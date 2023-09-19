@@ -5,14 +5,36 @@
 #define MAP 1000
 #define TIMENUM 30
 
-typedef struct fdSolt_s
+/*typedef struct fdSolt_s
 {
     int map[100];
     int size;
+}fdSolt_t;*/
+typedef enum ColorTyper
+{
+    RED=500,
+    BLACK
+}ColorTyper;
+typedef struct rbTreeNode_s
+{
+    struct rbTreeNode_s *left;
+    struct rbTreeNode_s *right;
+    struct rbTreeNode_s *parent;
+    int fd;
+    ColorTyper color;
+}rbTreeNode_t;
+
+typedef struct fdSolt_s
+{
+    rbTreeNode_t *root;
+    rbTreeNode_t *nil;
+    int size;
 }fdSolt_t;
+
 typedef struct timeWheel_s
 {
     fdSolt_t timewheel[TIMENUM];
+    
     int curPointer;
     int lastPointer;
     time_t time;
@@ -132,4 +154,22 @@ int addTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int netfd);
 int delTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int netfd);
 int updateTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int netfd);
 int rotateTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int epfd);
+//---------rbTree------------------
+fdSolt_t *initRBTree();
+void rightRotate(fdSolt_t *T,rbTreeNode_t *x);
+void leftRotate(fdSolt_t *T,rbTreeNode_t *x);
+void insertNode(fdSolt_t *T,int fd);
+//查找插入结点的父节点
+rbTreeNode_t *findInsertPlace(fdSolt_t *T,rbTreeNode_t *newp);
+int checkUncleColor(rbTreeNode_t *father); 
+void alterUncle(fdSolt_t *T,rbTreeNode_t *father,rbTreeNode_t *newp);
+void inorder(fdSolt_t *T,rbTreeNode_t *root,int *arr,int *len);
+void deleteNode(fdSolt_t *T,int fd);
+rbTreeNode_t *findDeleteNode(fdSolt_t *T,int fd); 
+rbTreeNode_t *findMinNode(fdSolt_t *T,rbTreeNode_t *p);
+//用v替代u
+void rbTransplant(fdSolt_t *T,rbTreeNode_t *u,rbTreeNode_t *v);
+
+void RB_delete_fixup(fdSolt_t *T, rbTreeNode_t** x);
+void deleteOrder(fdSolt_t *T,rbTreeNode_t *root);
 #endif

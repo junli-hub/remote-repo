@@ -9,5 +9,13 @@ int main(void)
     }
     inorder(tree,tree->root);
     printf("\n");
+
+    for(int i=0;i<16;i++)
+    {
+        deleteNode(tree,m[i]);
+        printf("i=%d m[i]=%d\n",i,m[i]);
+    }
+    printf("inorder:\n");
+    inorder(tree,tree->root);
     return 0;
 }

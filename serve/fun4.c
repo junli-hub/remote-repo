@@ -8,18 +8,24 @@ int rotateTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int epfd)
     train.length=0;
     int cur=timewheel->curPointer;
     int netfd;
-    for(int i=0;i<timewheel->timewheel[cur].size;i++)
+    int size=timewheel->timewheel[cur].size;
+    int *array=(int *)calloc(1,sizeof(int)*size);
+    inorder(&(timewheel->timewheel[cur]),timewheel->timewheel[cur].root,array,&(timewheel->timewheel[cur].size));
+    for(int i=0;i<size;i++)
     {
-        netfd=timewheel->timewheel[cur].map[i];
+        netfd=array[i];
         fdmap->map[netfd]=-1;
         send(netfd,&train,sizeof(train.length)+train.length,MSG_NOSIGNAL);
         epoll_ctl(epfd, EPOLL_CTL_DEL, netfd,NULL);
         printf("netfd:%d close\n",netfd);
         close(netfd);
     }
+    deleteOrder(&(timewheel->timewheel[cur]),timewheel->timewheel[cur].root);
+    timewheel->timewheel[cur].root=timewheel->timewheel[cur].nil;
     timewheel->timewheel[cur].size=0;
     timewheel->lastPointer=cur;
     timewheel->curPointer=(cur+1)%TIMENUM;
+    free(array);
     timewheel->time=time(NULL);
     return 0;
 }
@@ -31,29 +37,14 @@ int updateTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int netfd)
 }
 int delTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int netfd)
 {
-    int flag=0;
-    for(int i=0;i<timewheel->timewheel[fdmap->map[netfd]].size;i++)
-    {
-        if(flag==1)
-        {
-            timewheel->timewheel[fdmap->map[netfd]].map[i-1]
-                =timewheel->timewheel[fdmap->map[netfd]].map[i];
-        }
-        if(timewheel->timewheel[fdmap->map[netfd]].map[i]==netfd)
-        {
-            flag=1;
-        }
-    }
-    timewheel->timewheel[fdmap->map[netfd]].size--;
+    deleteNode(&(timewheel->timewheel[fdmap->map[netfd]]),netfd);
     fdmap->map[netfd]=-1;
     return 0;
 }
 int addTimeWheel(timeWheel_t *timewheel,map_t *fdmap,int netfd)
 {
     fdmap->map[netfd]=timewheel->lastPointer;
-    int len=timewheel->timewheel[timewheel->lastPointer].size;
-    timewheel->timewheel[timewheel->lastPointer].map[len++]=netfd;
-    timewheel->timewheel[timewheel->lastPointer].size=len;
+    insertNode(&(timewheel->timewheel[timewheel->lastPointer]),netfd);
     return 0;
 }
 void initTimeWheel(timeWheel_t *timewheel,map_t *fdmap)

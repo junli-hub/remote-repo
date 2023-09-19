@@ -29,3 +29,9 @@ void alterUncle(fdSolt_t *T,rbTreeNode_t *father,rbTreeNode_t *newp);
 void inorder(fdSolt_t *T,rbTreeNode_t *root);
 void deleteNode(fdSolt_t *T,int fd);
 rbTreeNode_t *findDeleteNode(fdSolt_t *T,int fd); 
+rbTreeNode_t *findMinNode(fdSolt_t *T,rbTreeNode_t *p);
+//用v替代u
+void rbTransplant(fdSolt_t *T,rbTreeNode_t *u,rbTreeNode_t *v);
+
+void RB_delete_fixup(fdSolt_t *T, rbTreeNode_t** x);
+
